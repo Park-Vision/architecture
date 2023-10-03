@@ -11,7 +11,7 @@ workspace {
             parkingModerator -> this "Używa"
             logged_user -> this "Używa"            
          }
-         apiApp = container "Backend API Application" "" "Spring Boot / Java" {
+         apiApp = container "Backend API Application" "System backendowy obsługujący przetwarzanie danych i integrację Kafka" "Spring Boot / Java" {
             viewApp -> this "Wykonuj żądania API do" "JSON/HTTP"
             
          }
@@ -21,38 +21,32 @@ workspace {
             apiApp -> this "Czytaj z i zapisuj do" "SQL/TCP"
          }
          
-         droneBroker = container "Drone Backend" "Redis to Websocket, pośredniczy w komunikacji z dronem między innymi poprzez integrację Websocket z Redis i HTTP" {   
-            viewApp -> this "Wysyła dane do" "WebSocket"
-            this -> viewApp "Wysyła dane do" "WebSocket"
+         droneBroker = container "Kafka" "Pośredniczy w komunikacji asynchronicznej" "Apache Kafka" {   
+            apiApp -> this "Wysyła dane do" "Kafka"
+         }
+         
+         droneSystem = container "Drone Mission Manager" "Obsługuje komunikację z systemem drona, zarządza misją drona w czasie rzeczywistym i przesyła informacje do Park Vision System" {
+            droneBroker -> this "Wysyła dane w czasie rzeczywistym do" "Kafka"
          }
       }
       
       
-      droneSystem = softwareSystem "Drone Mission Manager" "Obsługuje komunikację z systemem drona, zarządza misją drona w czasie rzeczywistym i przesyła informacje do Park Vision System" {
-         this -> webSystem "Wysyła dane"
-         webSystem -> this "Wysyła dane"
-         droneBroker -> this "Wysyła dane w czasie rzeczywistym do" "Redis"
-         this -> droneBroker "Wysyła dane w czasie rzeczywistym do" "Redis"
-         this -> apiApp "Wysyła i pobiera dane" "JSON/HTTP"
-      }
+      
       
       droneFirmware = softwareSystem "Drone Firmware" "Oprogramowanie drona" {
-         this -> droneSystem "Wysyła dane przez protokół MAVlink"
+         tags "external system"
          droneSystem -> this "Wysyła dane przez protokół MAVlink"
       }
       
       systemPlatnosci = softwareSystem "System płatności" "Obsługuje płatności za rezerwacje" {
          tags "external system"
-         this -> webSystem "Wysyła dane"
          webSystem -> this "Wysyła dane"
-         this -> apiApp "Wysyła dane" "JSON/HTTP"
          apiApp -> this "Wysyła dane" "JSON/HTTP"
       }
       
       systemMailowy = softwareSystem "System mailowy" "Obsługuje wysyłanie wiadomości e-mail" {
          tags "external system"
          this -> logged_user "Wysyła E-mail" {
-            // tags "Tag 1"
          }
          webSystem -> this "Wysyła dane"
          apiApp -> this "Wysyła E-mail używając"
@@ -77,11 +71,6 @@ workspace {
       theme default
       
       styles {
-         // relationship "Tag 1" {
-         //    color #ff0000
-         //    dashed false
-         // }
-         
          element "external system" {
             background #B7B7B7
             shape RoundedBox
