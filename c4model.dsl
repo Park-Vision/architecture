@@ -22,11 +22,11 @@ workspace {
          }
          
          droneBroker = container "Kafka" "Pośredniczy w komunikacji asynchronicznej" "Apache Kafka" {   
-            apiApp -> this "Wysyła dane do" "Kafka"
+            apiApp -> this "Wysyła dane do" "TCP"
          }
          
          droneSystem = container "Drone Mission Manager" "Obsługuje komunikację z systemem drona, zarządza misją drona w czasie rzeczywistym i przesyła informacje do Park Vision System" {
-            droneBroker -> this "Wysyła dane w czasie rzeczywistym do" "Kafka"
+            droneBroker -> this "Wysyła dane w czasie rzeczywistym do" "TCP"
          }
       }
       
