@@ -1,55 +1,55 @@
 workspace {
    
    model {
-      parkingModerator = person "Kierownik parkingu" "Osoba zarządzająca parkingiem, monitoruje misje dronowe"
-      guest = person "Użytkownik niezalogowany" "Użytkownik przeglądający ofertę oraz funkcjonalności systemu"
-      logged_user = person "Użytkownik zalogowany" "Użytkownik systemu, posiadający konto, korzystający z funkcjonalności systemu"
+      parkingModerator = person "Parking manager" "Person managing the parking lot, monitors the drone missions"
+      guest = person "Not authenticated user" "A user viewing the offer and system functionalities"
+      logged_user = person "Authenticated user" "A system user who has an account and uses the system's functionalities"
       
-      webSystem = softwareSystem "Park Vision System" "Pozwala użytkownikom przeglądać informacje parkingów, tworzyć rezerwację oraz je opłacać" {
+      webSystem = softwareSystem "Park Vision System" "Allows users to view parking information, create reservations and pay for them" {
          viewApp = container "View Application" "" "React/ JavaScript" {
-            guest -> this "Używa"
-            parkingModerator -> this "Używa"
-            logged_user -> this "Używa"            
+            guest -> this "Uses"
+            parkingModerator -> this "Uses"
+            logged_user -> this "Uses"            
          }
-         apiApp = container "Backend API Application" "System backendowy obsługujący przetwarzanie danych i integrację Kafka" "Spring Boot / Java" {
-            viewApp -> this "Wykonuj żądania API do" "JSON/HTTP"
+         apiApp = container "Backend API Application" "Backend system supporting data processing and Kafka integration" "Spring Boot / Java" {
+            viewApp -> this "Make API requests to" "JSON/HTTP"
             
          }
          
          database = container "Database" "" "PostgreSQL" {
             tags "Database"
-            apiApp -> this "Czytaj z i zapisuj do" "SQL/TCP"
+            apiApp -> this "Read and write to" "SQL/TCP"
          }
          
-         droneBroker = container "Kafka" "Pośredniczy w komunikacji asynchronicznej" "Apache Kafka" {   
-            apiApp -> this "Wysyła dane do" "TCP"
+         droneBroker = container "Kafka" "It mediates asynchronous communication" "Apache Kafka" {   
+            apiApp -> this "Sends data to" "TCP"
          }
          
-         droneSystem = container "Drone Mission Manager" "Obsługuje komunikację z systemem drona, zarządza misją drona w czasie rzeczywistym i przesyła informacje do Park Vision System" {
-            droneBroker -> this "Wysyła dane w czasie rzeczywistym do" "TCP"
+         droneSystem = container "Drone Mission Manager" "It handles communication with the drone system, manages the drone mission in real time, and transmits information to the Park Vision System" {
+            droneBroker -> this "Sends real-time data to" "TCP"
          }
       }
       
       
       
       
-      droneFirmware = softwareSystem "Drone Firmware" "Oprogramowanie drona" {
+      droneFirmware = softwareSystem "Drone Firmware" "Drone software" {
          tags "external system"
-         droneSystem -> this "Wysyła dane przez protokół MAVlink"
+         droneSystem -> this "Sends data via the MAVlink protocol"
       }
       
-      systemPlatnosci = softwareSystem "System płatności" "Obsługuje płatności za rezerwacje" {
+      systemPlatnosci = softwareSystem "Payment system" "Supports payments for reservations" {
          tags "external system"
-         webSystem -> this "Wysyła dane"
-         apiApp -> this "Wysyła dane" "JSON/HTTP"
+         webSystem -> this "Sends data"
+         apiApp -> this "Sends data" "JSON/HTTP"
       }
       
-      systemMailowy = softwareSystem "System mailowy" "Obsługuje wysyłanie wiadomości e-mail" {
+      systemMailowy = softwareSystem "Email system" "Supports email sending" {
          tags "external system"
-         this -> logged_user "Wysyła E-mail" {
+         this -> logged_user "Sends E-mail" {
          }
-         webSystem -> this "Wysyła dane"
-         apiApp -> this "Wysyła E-mail używając"
+         webSystem -> this "Sends data"
+         apiApp -> this "Sends E-mail using"
       }
       
    }
