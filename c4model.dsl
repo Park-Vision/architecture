@@ -22,16 +22,13 @@ workspace {
          }
          
          droneBroker = container "Kafka" "It mediates asynchronous communication" "Apache Kafka" {   
-            apiApp -> this "Sends data to" "TCP"
-         }
-         
-         droneSystem = container "Drone Mission Manager" "It handles communication with the drone system, manages the drone mission in real time, and transmits information to the Park Vision System" {
-            droneBroker -> this "Sends real-time data to" "TCP"
+            apiApp -> this "Sends data to" "TSL1.2"
          }
       }
       
-      
-      
+      droneSystem = softwareSystem "Drone Mission Manager" "It handles communication with the drone system, manages the drone mission in real time, and transmits information to the Park Vision System" {
+            droneBroker -> this "Sends real-time data to" "TSL1.2"
+         }
       
       droneFirmware = softwareSystem "Drone Firmware" "Drone software" {
          tags "external system"
