@@ -1,25 +1,67 @@
 workspace {
    
-   model {
-      parkingModerator = person "Parking manager" "Person managing the parking lot, monitors the drone missions"
-      guest = person "Not authenticated user" "A user viewing the offer and system functionalities"
-      logged_user = person "Authenticated user" "A system user who has an account and uses the system's functionalities"
+    model {
+        parkingModerator = person "Parking Manager" "Person managing the parking lot, monitors the drone missions"
+        guest = person "Not Authenticated User" "A user viewing the offer and system functionalities"
+        logged_user = person "Authenticated User" "A system user who has an account and uses the system's functionalities"
+
+        
       
-      webSystem = softwareSystem "Park Vision System" "Allows users to view parking information, create reservations and pay for them" {
-         viewApp = container "View Application" "" "React/ JavaScript" {
-            guest -> this "Uses"
-            parkingModerator -> this "Uses"
-            logged_user -> this "Uses"            
-         }
-         apiApp = container "Backend API Application" "Backend system supporting data processing and Kafka integration" "Spring Boot / Java" {
-            viewApp -> this "Make API requests to" "JSON/HTTP"
-            
-         }
+        webSystem = softwareSystem "Park Vision System" "Allows users to view parking information, create reservations and pay for them" {
+
+
+            viewApp = container "Web App" "Frontend responsible for the UI of the ParkVision" "React / JavaScript" {
+                guest -> this "Uses"
+                parkingModerator -> this "Uses"
+                logged_user -> this "Uses"
+
+                viewAppPages = component "pages" "" "React / JavaScript" {
+                    tags "Pages"
+                }
+
+                viewAppRedux = component "redux" "" "React / JavaScript" {
+                    tags "Redux"
+                }
+
+                viewAppComponents = component "components" "" "React / JavaScript" {
+                    tags "Components"
+                }
+
+                viewAppUtils = component "utils" "" "React / JavaScript" {
+                    tags "Utils"
+                }
+
+                viewAppAssets = component "assets" "" "React / JavaScript" {
+                    tags "Assets"
+                }
+
+                viewAppServices = component "services" "" "JavaScript / Axios" {
+                    tags "Services"
+                }
+
+                viewAppActions = component "Actions" "" "React / JavaScript" {
+                    tags "Actions"
+                }
+
+                viewAppPages -> viewAppActions "Uses"
+                viewAppPages -> viewAppUtils "Uses"
+                viewAppComponents -> viewAppActions "Uses" 
+                viewAppComponents -> viewAppAssets "Uses" "Assets"
+                viewAppPages -> viewAppAssets "Uses" "Assets"
+                viewAppActions -> viewAppServices "Uses" "Services"
+                viewAppActions -> viewAppRedux "Uses" "Redux"
+            }
+
+
+            apiApp = container "Backend API Application" "Backend system supporting data processing and Kafka integration" "Spring Boot / Java" {
+                viewApp -> this "Make API requests to" "JSON/HTTP"
+                this -> viewAppServices "Used by" "JSON/HTTP"
+            }
          
-         database = container "Database" "" "PostgreSQL" {
-            tags "Database"
-            apiApp -> this "Read and write to" "SQL/TCP"
-         }
+            database = container "Database" "Application DB" "PostgreSQL" {
+                tags "Database"
+                apiApp -> this "Read and write to" "SQL/TCP"
+            }
          
          droneBroker = container "Kafka" "It mediates asynchronous communication" "Apache Kafka" {   
             apiApp -> this "Sends data to" "TLS1.2"
@@ -30,53 +72,57 @@ workspace {
             droneBroker -> this "Sends real-time data to" "TLS1.2"
          }
       
-      droneFirmware = softwareSystem "Drone Firmware" "Drone software" {
-         tags "external system"
-         droneSystem -> this "Sends data via the MAVlink protocol"
-      }
+        droneFirmware = softwareSystem "Drone Firmware" "Drone software" {
+            tags "external system"
+            droneSystem -> this "Sends data via the MAVlink protocol"
+        }
       
-      systemPlatnosci = softwareSystem "Payment system" "Supports payments for reservations" {
-         tags "external system"
-         webSystem -> this "Sends data"
-         apiApp -> this "Sends data" "JSON/HTTP"
-      }
+        systemPlatnosci = softwareSystem "Payment system" "Supports payments for reservations" {
+            tags "external system"
+            webSystem -> this "Sends data"
+            apiApp -> this "Sends data" "JSON/HTTP"
+        }
       
-      systemMailowy = softwareSystem "Email system" "Supports email sending" {
-         tags "external system"
-         this -> logged_user "Sends E-mail" {
-         }
-         webSystem -> this "Sends data"
-         apiApp -> this "Sends E-mail using"
-      }
-      
-   }
+        systemMailowy = softwareSystem "Email system" "Supports email sending" {
+            tags "external system"
+            this -> logged_user "Sends E-mail" {
+            }
+            webSystem -> this "Sends data"
+            apiApp -> this "Sends E-mail using"
+        }
+    }
    
-   views {
+    views {
       
-      systemContext webSystem {
-         include *
-         include droneFirmware 
-      }
+        systemContext webSystem {
+            include *
+            include droneFirmware
+        }
       
       
-      container webSystem {
-         include *
-         include droneFirmware
-         include droneSystem
-      }
+        container webSystem {
+            include *
+            include droneFirmware
+            include droneSystem
+        }
       
-      theme default
+        component viewApp {
+            include *
+            include apiApp
+        }
       
-      styles {
-         element "external system" {
-            background #B7B7B7
-            shape RoundedBox
-         }
+        theme default
+      
+        styles {
+            element "external system" {
+                background #B7B7B7
+                shape RoundedBox
+            }
          
-         element "Database" {
-            shape cylinder
-         }
-      }
-   }
+            element "Database" {
+                shape cylinder
+            }
+        }
+    }
    
 }
