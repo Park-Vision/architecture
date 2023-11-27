@@ -11,11 +11,12 @@ workspace {
 
 
             viewApp = container "Web App" "Frontend responsible for the UI of the ParkVision" "React / JavaScript" {
-                guest -> this "Uses"
-                parkingModerator -> this "Uses"
-                logged_user -> this "Uses"
+
 
                 viewAppPages = component "pages" "" "React / JavaScript" {
+                     guest -> this "Uses"
+                     parkingModerator -> this "Uses"
+                     logged_user -> this "Uses"
                     tags "Pages"
                 }
 
@@ -54,8 +55,8 @@ workspace {
 
 
             apiApp = container "Backend API Application" "Backend system supporting data processing and Kafka integration" "Spring Boot / Java" {
-                viewApp -> this "Make API requests to" "JSON/HTTP"
-                this -> viewAppServices "Used by" "JSON/HTTP"
+               //  viewApp -> this "Make API requests to" "JSON/HTTP"
+                viewAppServices -> this "Make API requests to" "JSON/HTTP"
             }
          
             database = container "Database" "Application DB" "PostgreSQL" {
@@ -63,7 +64,7 @@ workspace {
                 apiApp -> this "Read and write to" "SQL/TCP"
             }
          
-         droneBroker = container "Kafka" "It mediates asynchronous communication" "Apache Kafka" {   
+         droneBroker = container "Message Broker" "It mediates asynchronous communication" "Apache Kafka" {   
             apiApp -> this "Sends data to" "TLS1.2"
          }
       }
@@ -109,6 +110,9 @@ workspace {
         component viewApp {
             include *
             include apiApp
+            include guest
+            include logged_user
+            include parkingModerator
         }
       
         theme default
