@@ -1,6 +1,7 @@
 workspace {
    
     model {
+        admin = person "Admin" "Person managing the parking managers' accounts"
         parkingModerator = person "Parking Manager" "Person managing the parking lot, monitors the drone missions"
         guest = person "Not Authenticated User" "A user viewing the offer and system functionalities"
         logged_user = person "Authenticated User" "A system user who has an account and uses the system's functionalities"
@@ -14,6 +15,7 @@ workspace {
 
 
                 viewAppPages = component "pages" "" "React / JavaScript" {
+                    admin -> this "Uses"
                     guest -> this "Uses"
                     parkingModerator -> this "Uses"
                     logged_user -> this "Uses"
