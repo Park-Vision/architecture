@@ -14,9 +14,9 @@ workspace {
 
 
                 viewAppPages = component "pages" "" "React / JavaScript" {
-                     guest -> this "Uses"
-                     parkingModerator -> this "Uses"
-                     logged_user -> this "Uses"
+                    guest -> this "Uses"
+                    parkingModerator -> this "Uses"
+                    logged_user -> this "Uses"
                     tags "Pages"
                 }
 
@@ -55,8 +55,16 @@ workspace {
 
 
             apiApp = container "Backend API Application" "Backend system supporting data processing and Kafka integration" "Spring Boot / Java" {
-               //  viewApp -> this "Make API requests to" "JSON/HTTP"
+                viewApp -> this "Sends real-time data" "WebSocket"
+                this -> viewApp "Sends real-time data" "WebSocket"
+                
+                viewApp -> this "Make API requests to" "JSON/HTTP"
+                
                 viewAppServices -> this "Make API requests to" "JSON/HTTP"
+                
+                
+                viewAppServices -> this "Sends real-time data" "WebSocket"
+                this -> viewAppServices "Sends real-time data" "WebSocket"
             }
          
             database = container "Database" "Application DB" "PostgreSQL" {
@@ -64,19 +72,21 @@ workspace {
                 apiApp -> this "Read and write to" "SQL/TCP"
             }
          
-         droneBroker = container "Message Broker" "It mediates asynchronous communication" "Apache Kafka" {   
-            apiApp -> this "Sends data to" "TLS1.2"
-         }
-      }
-      
-      droneSystem = softwareSystem "Drone Mission Manager" "It handles communication with the drone system, manages the drone mission in real time, and transmits information to the Park Vision System" {
-            droneBroker -> this "Sends real-time data to" "TLS1.2"
-         }
-      
-        droneFirmware = softwareSystem "Drone Firmware" "Drone software" {
-            tags "external system"
-            droneSystem -> this "Sends data via the MAVlink protocol"
+            droneBroker = container "Message Broker" "It mediates asynchronous communication" "Apache Kafka" {
+                apiApp -> this "Sends real-time data to" "TLS1.2"
+                this -> apiApp "Sends real-time data to" "TLS1.2"
+            }
         }
+      
+        droneSystem = softwareSystem "Drone Mission Manager" "It handles communication with the drone system, manages the drone mission in real time, and transmits information to the Park Vision System" {
+            droneBroker -> this "Sends real-time data to" "TLS1.2"
+            this -> droneBroker "Sends real-time data to" "TLS1.2"
+        }
+      
+        // droneFirmware = softwareSystem "Drone Firmware" "Drone software" {
+        //     tags "external system"
+        //     droneSystem -> this "Sends data via the MAVlink protocol"
+        // }
       
         systemPlatnosci = softwareSystem "Payment system" "Supports payments for reservations" {
             tags "external system"
@@ -97,13 +107,13 @@ workspace {
       
         systemContext webSystem {
             include *
-            include droneFirmware
+            // include droneFirmware
         }
       
       
         container webSystem {
             include *
-            include droneFirmware
+            // include droneFirmware
             include droneSystem
         }
       
