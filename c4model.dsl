@@ -89,6 +89,7 @@ workspace {
                 apiAppServices -> apiAppConfigurations  "Uses" "Spring Bean"
                 
                 apiAppKafka -> viewAppServices "Sends real-time data" "WebSocket"
+                apiAppKafka -> apiAppServices "Uses"
             }
          
             database = container "Database" "Application DB" "PostgreSQL" {
