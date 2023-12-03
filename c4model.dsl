@@ -5,8 +5,6 @@ workspace {
         parkingModerator = person "Parking Manager" "Person managing the parking lot, monitors the drone missions"
         guest = person "Not Authenticated User" "A user viewing the offer and system functionalities"
         logged_user = person "Authenticated User" "A system user who has an account and uses the system's functionalities"
-
-        
       
         webSystem = softwareSystem "Park Vision System" "Allows users to view parking information, create reservations and pay for them" {
 
@@ -61,22 +59,49 @@ workspace {
                 this -> viewApp "Sends real-time data" "WebSocket"
                 
                 viewApp -> this "Make API requests to" "JSON/HTTP"
-                
                 viewAppServices -> this "Make API requests to" "JSON/HTTP"
                 
                 
                 viewAppServices -> this "Sends real-time data" "WebSocket"
                 this -> viewAppServices "Sends real-time data" "WebSocket"
+                
+                
+                
+                apiAppControllers = component "Controller Layer" "" "Spring Controller" {
+                    viewAppServices -> this "Make API requests to" "JSON/HTTP"
+                    tags "Java"
+                }
+
+                apiAppServices = component "Service Layer" "" "Spring Service Bean" {
+                    tags "Java"
+                }
+                apiAppRepositories = component "DAO Layer" "" "Spring Repository" {
+                    tags "Java"
+                }
+                apiAppConfigurations = component "Configuration Layer" "" "Spring Configuration" {
+                }    
+                apiAppKafka = component "Message Handler" "" "Spring Component" {
+                }   
+
+                
+                apiAppControllers -> apiAppServices "Uses"
+                apiAppServices -> apiAppRepositories "Uses"
+                apiAppServices -> apiAppConfigurations  "Uses" "Spring Bean"
+                
+                apiAppKafka -> viewAppServices "Sends real-time data" "WebSocket"
             }
          
             database = container "Database" "Application DB" "PostgreSQL" {
                 tags "Database"
                 apiApp -> this "Read and write to" "SQL/TCP"
+                apiAppRepositories -> this "Stores/Retrieves"
             }
          
             droneBroker = container "Message Broker" "It mediates asynchronous communication" "Apache Kafka" {
                 apiApp -> this "Sends real-time data to" "TLS1.2"
                 this -> apiApp "Sends real-time data to" "TLS1.2"
+                apiAppControllers -> this  "Sends real-time data to" "TLS1.2"
+                this -> apiAppKafka "Sends real-time data to" "TLS1.2"
             }
         }
       
@@ -94,6 +119,7 @@ workspace {
             tags "external system"
             webSystem -> this "Sends data"
             apiApp -> this "Sends data" "JSON/HTTP"
+            apiAppServices -> this "Sends data" "JSON/HTTP"
         }
       
         systemMailowy = softwareSystem "Email system" "Supports email sending" {
@@ -102,6 +128,8 @@ workspace {
             }
             webSystem -> this "Sends data"
             apiApp -> this "Sends E-mail using"
+            
+            apiAppServices -> this "Sends E-mail using"
         }
     }
    
@@ -125,6 +153,16 @@ workspace {
             include guest
             include logged_user
             include parkingModerator
+            include admin
+        }
+        
+        component apiApp {
+            include *
+            include viewApp
+            include systemMailowy
+            include systemPlatnosci
+            include droneBroker
+            
         }
       
         theme default
@@ -140,5 +178,4 @@ workspace {
             }
         }
     }
-   
 }
