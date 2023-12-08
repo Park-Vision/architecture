@@ -104,17 +104,43 @@ workspace {
                 apiAppControllers -> this  "Sends real-time data to" "TLS1.2"
                 this -> apiAppKafka "Sends real-time data to" "TLS1.2"
             }
+            
+        }
+        droneFirmware = softwareSystem "Drone Firmware" "Low level drone software" {
+            tags "external system"
         }
       
         droneSystem = softwareSystem "Drone Mission Manager" "It handles communication with the drone system, manages the drone mission in real time, and transmits information to the Park Vision System" {
             droneBroker -> this "Sends real-time data to" "TLS1.2"
             this -> droneBroker "Sends real-time data to" "TLS1.2"
+            
+            missionManager = container "Mission manager service" "Drone and Kafka integration" {
+                stateModule = component "Drone state machine" "Manages stages of drone mission and transitions between them" "python" {
+                    tags "state"
+                }
+                decisionModule = component "decision" "Classifies parking spot as free or taken" "python" {
+                    tags "decision"
+                }
+                missionModule = component "mission" "Mission planning and tracking" "python" {
+                    tags "mission"
+                }
+                telemetryModule = component "telemetry" "Responsible for communication with server" "python" {
+                    tags "telemetry"
+                }
+                
+                stateModule -> telemetryModule "Uses" 
+                stateModule -> decisionModule "Uses" 
+                stateModule -> missionModule "Uses" 
+
+                telemetryModule -> droneBroker "Sends real-time data to" "TLS1.2"
+                droneBroker -> telemetryModule "Sends real-time data to" "TLS1.2"
+
+                stateModule -> droneFirmware "Sends commands via the MAVlink protocol" 
+                droneFirmware -> stateModule "Sends data via the MAVlink protocol" 
+            }
         }
       
-        // droneFirmware = softwareSystem "Drone Firmware" "Drone software" {
-        //     tags "external system"
-        //     droneSystem -> this "Sends data via the MAVlink protocol"
-        // }
+
       
         systemPlatnosci = softwareSystem "Payment system" "Supports payments for reservations" {
             tags "external system"
@@ -163,9 +189,12 @@ workspace {
             include systemMailowy
             include systemPlatnosci
             include droneBroker
-            
         }
-      
+
+        component missionManager {
+            include *
+            include droneSystem
+        }
         theme default
       
         styles {
