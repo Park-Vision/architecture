@@ -6,7 +6,7 @@ workspace {
         guest = person "Not Authenticated User" "A user viewing the offer and system functionalities"
         logged_user = person "Authenticated User" "A system user who has an account and uses the system's functionalities"
       
-        webSystem = softwareSystem "Park Vision System" "Allows users to view parking information, create reservations and pay for them" {
+        webSystem = softwareSystem "ParkVision System" "Allows users to view parking information, create reservations and pay for them" {
 
 
             viewApp = container "Web App" "Frontend responsible for the UI of the ParkVision" "React / JavaScript" {
@@ -86,7 +86,7 @@ workspace {
                 
                 apiAppControllers -> apiAppServices "Uses"
                 apiAppServices -> apiAppRepositories "Uses"
-                apiAppServices -> apiAppConfigurations  "Uses" "Spring Bean"
+                apiAppServices -> apiAppConfigurations "Uses" "Spring Bean"
                 
                 apiAppKafka -> viewAppServices "Sends real-time data" "WebSocket"
                 apiAppKafka -> apiAppServices "Uses"
@@ -101,7 +101,7 @@ workspace {
             droneBroker = container "Message Broker" "It mediates asynchronous communication" "Apache Kafka" {
                 apiApp -> this "Sends real-time data to" "TLS1.2"
                 this -> apiApp "Sends real-time data to" "TLS1.2"
-                apiAppControllers -> this  "Sends real-time data to" "TLS1.2"
+                apiAppControllers -> this "Sends real-time data to" "TLS1.2"
                 this -> apiAppKafka "Sends real-time data to" "TLS1.2"
             }
             
@@ -110,7 +110,7 @@ workspace {
             tags "external system"
         }
       
-        droneSystem = softwareSystem "Drone Mission Manager" "It handles communication with the drone system, manages the drone mission in real time, and transmits information to the Park Vision System" {
+        droneSystem = softwareSystem "Drone Mission Manager" "It handles communication with the drone system, manages the drone mission in real time, and transmits information to the ParkVision System" {
             droneBroker -> this "Sends real-time data to" "TLS1.2"
             this -> droneBroker "Sends real-time data to" "TLS1.2"
             
@@ -151,8 +151,8 @@ workspace {
       
         systemMailowy = softwareSystem "Email system" "Supports email sending" {
             tags "external system"
-            this -> logged_user "Sends E-mail" {
-            }
+            this -> logged_user "Sends E-mail" 
+            this -> parkingModerator "Sends E-mail"
             webSystem -> this "Sends data"
             apiApp -> this "Sends E-mail using"
             
