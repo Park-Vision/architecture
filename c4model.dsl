@@ -64,74 +64,82 @@ workspace {
                 
                 viewAppServices -> this "Sends real-time data" "WebSocket"
                 this -> viewAppServices "Sends real-time data" "WebSocket"
-                
-                
-                
-                apiAppControllers = component "Drone Controller" "" "Spring Controller" {
+
+
+
+                apiAppControllers = component "Drone Controller" "Handles HTTP requests related to drones" "Spring Controller" {
                     viewAppServices -> this "Make API requests to" "JSON/HTTP"
                     tags "Java"
                 }
 
-                apiAppServices = component "Drone Service" "" "Spring Service Bean" {
+                apiAppServices = component "Drone Service" "Provides business logic for drone operations" "Spring Service Bean" {
                     tags "Java"
                 }
-                apiAppRepositories = component "Drone Repository" "" "Spring Repository" {
+                apiAppRepositories = component "Drone Repository" "Manages drone data persistence" "Spring Repository" {
                     tags "Java"
-                }
-                apiAppConfigurations = component "Kafka Configuration" "" "Spring Configuration" {
-                }
-                apiAppKafka = component "Kafka Message Handler" "" "Spring Component" {
                 }
 
-
-
-                apiAppControllersRes = component "Reservation Controller" "" "Spring Controller" {
-                    viewAppServices -> this "Make API requests to" "JSON/HTTP"
-                    tags "Java"
+                apiAppConfigurations = component "Kafka Configuration" "Configures settings for Kafka messaging" "Spring Configuration" {
                 }
-                apiAppControllersPay = component "Payment Controller" "" "Spring Controller" {
-                    viewAppServices -> this "Make API requests to" "JSON/HTTP"
-                    tags "Java"
+                apiAppKafka = component "Kafka Message Handler" "Handles incoming messages from Kafka" "Spring Component" {
                 }
-                apiAppControllersStripe = component "Stripe Charge Controller" "" "Spring Controller" {
+
+                apiAppControllersRes = component "Reservation Controller" "Deals with HTTP requests for reservations" "Spring Controller" {
                     viewAppServices -> this "Make API requests to" "JSON/HTTP"
                     tags "Java"
                 }
 
-
-                apiAppServicesParkingSpot = component "Parking Spot Service" "" "Spring Service Bean" {
-                    tags "Java"
-                }
-                apiAppServicesRes = component "Reservation Service" "" "Spring Service Bean" {
-                    tags "Java"
-                }
-                apiAppServicesPay = component "Payment Service" "" "Spring Service Bean" {
-                    tags "Java"
-                }
-                apiAppServicesEmail = component "Email Service" "" "Spring Service Bean" {
-                    tags "Java"
-                }
-                apiAppServicesStripe = component "Stripe Charge Service" "" "Spring Service Bean" {
-                    tags "Java"
-                }
-                apiAppServicesDroneMission = component "Drone Mission Service" "" "Spring Service Bean" {
+                apiAppControllersPay = component "Payment Controller" "Manages payment-related HTTP requests" "Spring Controller" {
+                    viewAppServices -> this "Make API requests to" "JSON/HTTP"
                     tags "Java"
                 }
 
-                apiAppRepositoriesDroneMission = component "Drone Mission Repository" "" "Spring Repository" {
+                apiAppControllersStripe = component "Stripe Charge Controller" "Handles Stripe charge-related HTTP requests" "Spring Controller" {
+                    viewAppServices -> this "Make API requests to" "JSON/HTTP"
                     tags "Java"
                 }
 
-                apiAppRepositoriesRes = component "Reservation Repository" "" "Spring Repository" {
+                apiAppServicesParkingSpot = component "Parking Spot Service" "Handles parking spot-related business logic" "Spring Service Bean" {
                     tags "Java"
                 }
-                apiAppRepositoriesParkingSpot = component "Parking Spot Repository" "" "Spring Repository" {
+
+                apiAppServicesRes = component "Reservation Service" "Provides business logic for reservations" "Spring Service Bean" {
                     tags "Java"
                 }
-                apiAppRepositoriesPay = component "Payment Repository" "" "Spring Repository" {
+
+                apiAppServicesPay = component "Payment Service" "Manages payment-related business logic" "Spring Service Bean" {
                     tags "Java"
                 }
-                apiAppRepositoriesStripe = component "Stripe Charge Repository" "" "Spring Repository" {
+
+                apiAppServicesEmail = component "Email Service" "Manages email-related functionality" "Spring Service Bean" {
+                    tags "Java"
+                }
+
+                apiAppServicesStripe = component "Stripe Charge Service" "Deals with Stripe charge-related operations" "Spring Service Bean" {
+                    tags "Java"
+                }
+
+                apiAppServicesDroneMission = component "Drone Mission Service" "Handles operations related to drone missions" "Spring Service Bean" {
+                    tags "Java"
+                }
+
+                apiAppRepositoriesDroneMission = component "Drone Mission Repository" "Manages data persistence for drone missions" "Spring Repository" {
+                    tags "Java"
+                }
+
+                apiAppRepositoriesRes = component "Reservation Repository" "Manages data persistence for reservations" "Spring Repository" {
+                    tags "Java"
+                }
+
+                apiAppRepositoriesParkingSpot = component "Parking Spot Repository" "Manages data persistence for parking spots" "Spring Repository" {
+                    tags "Java"
+                }
+
+                apiAppRepositoriesPay = component "Payment Repository" "Manages data persistence for payments" "Spring Repository" {
+                    tags "Java"
+                }
+
+                apiAppRepositoriesStripe = component "Stripe Charge Repository" "Manages data persistence for Stripe charges" "Spring Repository" {
                     tags "Java"
                 }
 
@@ -215,15 +223,15 @@ workspace {
                 telemetryModule -> droneBroker "Sends real-time data to" "TLS1.2"
                 droneBroker -> telemetryModule "Sends real-time data to" "TLS1.2"
 
-                stateModule -> droneFirmware "Sends commands via the MAVlink protocol"
-                droneFirmware -> stateModule "Sends data via the MAVlink protocol"
             }
         }
-      
-        // droneFirmware = softwareSystem "Drone Firmware" "Drone software" {
-        //     tags "external system"
-        //     droneSystem -> this "Sends data via the MAVlink protocol"
-        // }
+
+        droneFirmware = softwareSystem "Drone Firmware" "Drone software" {
+            tags "external system"
+            droneSystem -> this "Sends data via the MAVlink protocol"
+            stateModule -> this "Sends commands via the MAVlink protocol"
+            this -> stateModule "Sends data via the MAVlink protocol"
+        }
       
         systemPlatnosci = softwareSystem "Payment system" "Supports payments for reservations" {
             tags "external system"
