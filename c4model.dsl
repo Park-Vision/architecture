@@ -64,56 +64,144 @@ workspace {
                 
                 viewAppServices -> this "Sends real-time data" "WebSocket"
                 this -> viewAppServices "Sends real-time data" "WebSocket"
-                
-                
-                
-                apiAppControllers = component "Controller Layer" "" "Spring Controller" {
+
+
+
+                apiAppControllers = component "Drone Controller" "Handles HTTP requests related to drones" "Spring Controller" {
                     viewAppServices -> this "Make API requests to" "JSON/HTTP"
                     tags "Java"
                 }
 
-                apiAppServices = component "Service Layer" "" "Spring Service Bean" {
+                apiAppServices = component "Drone Service" "Provides business logic for drone operations" "Spring Service Bean" {
                     tags "Java"
                 }
-                apiAppRepositories = component "DAO Layer" "" "Spring Repository" {
+                apiAppRepositories = component "Drone Repository" "Manages drone data persistence" "Spring Repository" {
                     tags "Java"
                 }
-                apiAppConfigurations = component "Configuration Layer" "" "Spring Configuration" {
-                }    
-                apiAppKafka = component "Message Handler" "" "Spring Component" {
-                }   
 
-                
+                apiAppConfigurations = component "Kafka Configuration" "Configures settings for Kafka messaging" "Spring Configuration" {
+                }
+                apiAppKafka = component "Kafka Message Handler" "Handles incoming messages from Kafka" "Spring Component" {
+                }
+
+                apiAppControllersRes = component "Reservation Controller" "Deals with HTTP requests for reservations" "Spring Controller" {
+                    viewAppServices -> this "Make API requests to" "JSON/HTTP"
+                    tags "Java"
+                }
+
+                apiAppControllersPay = component "Payment Controller" "Manages payment-related HTTP requests" "Spring Controller" {
+                    viewAppServices -> this "Make API requests to" "JSON/HTTP"
+                    tags "Java"
+                }
+
+                apiAppControllersStripe = component "Stripe Charge Controller" "Handles Stripe charge-related HTTP requests" "Spring Controller" {
+                    viewAppServices -> this "Make API requests to" "JSON/HTTP"
+                    tags "Java"
+                }
+
+                apiAppServicesParkingSpot = component "Parking Spot Service" "Handles parking spot-related business logic" "Spring Service Bean" {
+                    tags "Java"
+                }
+
+                apiAppServicesRes = component "Reservation Service" "Provides business logic for reservations" "Spring Service Bean" {
+                    tags "Java"
+                }
+
+                apiAppServicesPay = component "Payment Service" "Manages payment-related business logic" "Spring Service Bean" {
+                    tags "Java"
+                }
+
+                apiAppServicesEmail = component "Email Service" "Manages email-related functionality" "Spring Service Bean" {
+                    tags "Java"
+                }
+
+                apiAppServicesStripe = component "Stripe Charge Service" "Deals with Stripe charge-related operations" "Spring Service Bean" {
+                    tags "Java"
+                }
+
+                apiAppServicesDroneMission = component "Drone Mission Service" "Handles operations related to drone missions" "Spring Service Bean" {
+                    tags "Java"
+                }
+
+                apiAppRepositoriesDroneMission = component "Drone Mission Repository" "Manages data persistence for drone missions" "Spring Repository" {
+                    tags "Java"
+                }
+
+                apiAppRepositoriesRes = component "Reservation Repository" "Manages data persistence for reservations" "Spring Repository" {
+                    tags "Java"
+                }
+
+                apiAppRepositoriesParkingSpot = component "Parking Spot Repository" "Manages data persistence for parking spots" "Spring Repository" {
+                    tags "Java"
+                }
+
+                apiAppRepositoriesPay = component "Payment Repository" "Manages data persistence for payments" "Spring Repository" {
+                    tags "Java"
+                }
+
+                apiAppRepositoriesStripe = component "Stripe Charge Repository" "Manages data persistence for Stripe charges" "Spring Repository" {
+                    tags "Java"
+                }
+
+
+
+                apiAppControllersRes -> apiAppServicesRes "Uses"
+                apiAppControllersRes -> apiAppServicesEmail "Uses"
+                #apiAppControllersRes -> apiAppServicesParkingSpot "Uses"
+
+                apiAppControllersStripe -> apiAppServicesRes "Uses"
+                apiAppControllersStripe -> apiAppServicesEmail "Uses"
+                apiAppControllersStripe -> apiAppServicesStripe "Uses"
+
+                apiAppControllersPay -> apiAppServicesPay "Uses"
+
+
+                apiAppServicesRes -> apiAppRepositoriesRes "Uses"
+                apiAppServicesRes -> apiAppServicesParkingSpot "Uses"
+                apiAppServicesRes -> apiAppServicesStripe "Uses"
+
+                apiAppServicesStripe -> apiAppRepositoriesStripe "Uses"
+                apiAppServicesStripe -> apiAppServicesPay "Uses"
+                apiAppServicesPay -> apiAppRepositoriesPay "Uses"
+                apiAppServicesParkingSpot -> apiAppRepositoriesParkingSpot "Uses"
+
+
+
+                apiAppServices -> apiAppServicesParkingSpot "Uses"
                 apiAppControllers -> apiAppServices "Uses"
                 apiAppServices -> apiAppRepositories "Uses"
                 apiAppServices -> apiAppConfigurations "Uses" "Spring Bean"
                 
                 apiAppKafka -> viewAppServices "Sends real-time data" "WebSocket"
                 apiAppKafka -> apiAppServices "Uses"
+                apiAppKafka -> apiAppServicesDroneMission "Uses"
+                apiAppServicesDroneMission -> apiAppRepositoriesDroneMission "Uses"
             }
-         
+
+
             database = container "Database" "Application DB" "PostgreSQL" {
                 tags "Database"
                 apiApp -> this "Read and write to" "SQL/TCP"
                 apiAppRepositories -> this "Stores/Retrieves"
+                apiAppRepositoriesParkingSpot -> this "Stores/Retrieves"
+                apiAppRepositoriesRes -> this "Stores/Retrieves"
+                apiAppRepositoriesPay -> this "Stores/Retrieves"
+                apiAppRepositoriesStripe -> this "Stores/Retrieves"
+                apiAppRepositoriesDroneMission -> this "Stores/Retrieves"
             }
          
             droneBroker = container "Message Broker" "It mediates asynchronous communication" "Apache Kafka" {
                 apiApp -> this "Sends real-time data to" "TLS1.2"
                 this -> apiApp "Sends real-time data to" "TLS1.2"
-                apiAppControllers -> this "Sends real-time data to" "TLS1.2"
+                apiAppServices -> this "Sends real-time data to" "TLS1.2"
                 this -> apiAppKafka "Sends real-time data to" "TLS1.2"
             }
-            
-        }
-        droneFirmware = softwareSystem "Drone Firmware" "Low level drone software" {
-            tags "external system"
         }
       
         droneSystem = softwareSystem "Drone Mission Manager" "It handles communication with the drone system, manages the drone mission in real time, and transmits information to the ParkVision System" {
             droneBroker -> this "Sends real-time data to" "TLS1.2"
             this -> droneBroker "Sends real-time data to" "TLS1.2"
-            
+
             missionManager = container "Mission manager service" "Drone and Kafka integration" {
                 stateModule = component "Drone state machine" "Manages stages of drone mission and transitions between them" "python" {
                     tags "state"
@@ -127,36 +215,39 @@ workspace {
                 telemetryModule = component "telemetry" "Responsible for communication with server" "python" {
                     tags "telemetry"
                 }
-                
-                stateModule -> telemetryModule "Uses" 
-                stateModule -> decisionModule "Uses" 
-                stateModule -> missionModule "Uses" 
+
+                stateModule -> telemetryModule "Uses"
+                stateModule -> decisionModule "Uses"
+                stateModule -> missionModule "Uses"
 
                 telemetryModule -> droneBroker "Sends real-time data to" "TLS1.2"
                 droneBroker -> telemetryModule "Sends real-time data to" "TLS1.2"
 
-                stateModule -> droneFirmware "Sends commands via the MAVlink protocol" 
-                droneFirmware -> stateModule "Sends data via the MAVlink protocol" 
             }
         }
-      
 
+        droneFirmware = softwareSystem "Drone Firmware" "Drone software" {
+            tags "external system"
+            droneSystem -> this "Sends data via the MAVlink protocol"
+            stateModule -> this "Sends commands via the MAVlink protocol"
+            this -> stateModule "Sends data via the MAVlink protocol"
+        }
       
         systemPlatnosci = softwareSystem "Payment system" "Supports payments for reservations" {
             tags "external system"
             webSystem -> this "Sends data"
             apiApp -> this "Sends data" "JSON/HTTP"
-            apiAppServices -> this "Sends data" "JSON/HTTP"
+            apiAppServicesStripe -> this "Sends data" "JSON/HTTP"
         }
       
         systemMailowy = softwareSystem "Email system" "Supports email sending" {
             tags "external system"
-            this -> logged_user "Sends E-mail" 
+            this -> logged_user "Sends E-mail"
             this -> parkingModerator "Sends E-mail"
             webSystem -> this "Sends data"
             apiApp -> this "Sends E-mail using"
             
-            apiAppServices -> this "Sends E-mail using"
+            apiAppServicesEmail -> this "Sends E-mail using"
         }
     }
    
@@ -184,11 +275,48 @@ workspace {
         }
         
         component apiApp {
-            include *
+            # include *
+            include viewApp
+            include apiAppServices
+            include apiAppServicesParkingSpot
+            #include systemMailowy
+            # include systemPlatnosci
+            include droneBroker
+            include apiAppControllers
+            include apiAppRepositories
+            include database
+            include apiAppKafka
+            include apiAppConfigurations
+            include apiAppServicesDroneMission
+            include apiAppRepositoriesDroneMission
+
+        }
+        component apiApp {
+            # include *
             include viewApp
             include systemMailowy
             include systemPlatnosci
-            include droneBroker
+            include apiAppControllersRes
+            include viewAppServices
+            include apiAppControllersPay
+            include apiAppControllersStripe
+
+
+            include apiAppServicesParkingSpot
+            include apiAppServicesRes
+            include apiAppServicesPay
+            include apiAppServicesEmail
+            include apiAppServicesStripe
+
+
+
+            include apiAppRepositoriesRes
+            #include apiAppRepositoriesParkingSpot
+            include apiAppRepositoriesPay
+
+            include apiAppRepositoriesStripe
+            include database
+            
         }
 
         component missionManager {
